@@ -55,14 +55,19 @@ local myPrompt = vPrompt:Create({
 
 Create prompt for entity bone:
 ```lua
-local vehicle = GetClosestVehicle(x, y, z, 5.00, 0, 70)
+local player = PlayerPedId()
+local coords = GetEntityCoords(player)
+local vehicle = GetClosestVehicle(coords.x, coords.y, coords.z, 5.00, 0, 70)
 local myPrompt = vPrompt:Create({
     key = "E",
     label = "Pick Doorlock",
     bone = {
         entity = vehicle, -- the entity
         name = 'door_dside_f' -- the bone name
-    }
+    },
+    canDraw = function()
+        return not IsPedInAnyVehicle(player)
+    end    
 })
 ```
 
@@ -108,13 +113,13 @@ end)
 local myPrompt = vPrompt:Create({
     key = 'E',              -- the key to be pressed
     label = 'Press Me',     -- the label
+    drawDistance = 4.0,     -- The distance from the coords / entity / bone before the prompt is drawn
+    interactDistance - 2.0, -- The distance from the coords / entity / bone before the player can interact    
     font = 0,               -- the font to be used
     scale = 0.4,            -- the font scale
     margin - 0.008,         -- The left / right margin for the label text
     padding = 0.004,        -- the padding for the background box
     offsetY = 0.00,         -- y-offset for the text (for custom fonts - GTAV native fonts are handled by the instance)
-    drawDistance = 4.0,     -- The distance from the coords / entity / bone before the prompt is drawn
-    interactDistance - 2.0, -- The distance from the coords / entity / bone before the player can interact
     backgroundColor = { r = 0, g = 0, b = 0, a = 100 },     -- background box color
     labelColor = { r = 255, g = 255, b = 255, a = 255 },    -- the label color
     buttonColor = { r = 255, g = 255, b = 255, a = 255 },   -- the button's background color
