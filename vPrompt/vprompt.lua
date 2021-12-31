@@ -6,18 +6,24 @@ local Keys = {
     ["LEFTSHIFT"] = 21, ["Z"] = 20, ["X"] = 73, ["C"] = 26, ["V"] = 0, ["B"] = 29, ["N"] = 249, ["M"] = 244, [","] = 82, ["."] = 81,
     ["LEFTCTRL"] = 36, ["LEFTALT"] = 19, ["SPACE"] = 22, ["RIGHTCTRL"] = 70,
     ["HOME"] = 213, ["PAGEUP"] = 10, ["PAGEDOWN"] = 11, ["DELETE"] = 178,
-    ["LEFT"] = 174, ["RIGHT"] = 175, ["UP"] = 27, ["DOWN"] = 173,
-    ["NENTER"] = 201, ["N4"] = 108, ["N5"] = 60, ["N6"] = 107, ["N+"] = 96, ["N-"] = 97, ["N7"] = 117, ["N8"] = 61, ["N9"] = 118
+    ["LEFT"] = 174, ["RIGHT"] = 175, ["UP"] = 27, ["DOWN"] = 173
 }
 
 vPrompt = {}
 vPrompt.__index = vPrompt
 
+------
+--
+-- @param options      - table of options
+--
+-- Create new vPrompt instance
+------
 function vPrompt:Create(options)
     local obj = {}
 
     setmetatable(obj, vPrompt)
 
+    -- Default config for set-up
     local defaultConfig = {
         font = 0,
         scale = 0.4,
@@ -34,8 +40,10 @@ function vPrompt:Create(options)
         canDraw = function() return true end,
     }
 
+    -- Check for valid key
     assert(Keys[options.key] ~= nil, '^1Invalid key:'.. options.key)
 
+    -- Merge user-defined options
     obj.label = options.label
     obj.key = Keys[options.key]
     obj.keyLabel = options.key
@@ -55,20 +63,24 @@ function vPrompt:Create(options)
     obj.callbacks = {}
 
     if options.entity then
+        -- Check for valid entity
         assert(DoesEntityExist(options.entity), '^1Invalid entity passed to "entity" option')
 
         obj.entity = options.entity
     elseif options.bone then
+        -- Check for valid entity
         assert(DoesEntityExist(options.bone.entity), '^1Invalid entity passed to "bone.entity" option')
 
         obj.boneEntity = options.bone.entity
         obj.boneIndex = GetEntityBoneIndexByName(options.bone.entity, options.bone.name)
     else
+        -- Check for valid vector3 coords
         assert(type(options.coords) == 'vector3', '^1Invalid vector3 value passed to "coords" option')
 
         obj.coords = options.coords       
     end
 
+    -- Handle offsets for native GTA:V fonts
     if obj.font == 1 then
         obj.offsetY = 0.01
     elseif obj.font == 2 then
@@ -77,12 +89,14 @@ function vPrompt:Create(options)
         obj.offsetY = 0.008
     end
 
+    -- Initialise
     obj:GetDimensions()
     obj:SetButton()
     obj:SetPadding()
     obj:SetBackground()
     obj:CreateThread()
 
+    -- Make sure we destroy the instance if the resource stops
     AddEventHandler('onResourceStop', function(resource)
         if resource == GetCurrentResourceName() then
             obj:Destroy()
@@ -95,9 +109,15 @@ end
 function vPrompt:GetDimensions()
     local sw, sh = GetActiveScreenResolution()
     
+    -- Get width of button
     self.keyTextWidth = self:GetTextWidth(self.keyLabel) 
-    self.labelTextWidth = self:GetTextWidth(self.label)     
+
+    -- Get width of background box
+    self.labelTextWidth = self:GetTextWidth(self.label) 
+    
+    -- Get the font height
     self.textHeight = GetRenderedCharacterHeight(self.scale, self.font)
+
     self.sw = sw
     self.sh = sh 
 end
@@ -120,8 +140,11 @@ function vPrompt:SetPadding()
 end
 
 function vPrompt:SetBackground()
+    self.minWidth = self.button.w + (self.padding.x * 2)
+    self.maxWidth = self.labelTextWidth + self.button.w + (self.padding.x * 3) + (self.margin * 2)
+
     self.background = {
-        w = self.labelTextWidth + self.button.w + (self.padding.x * 3) + (self.margin * 2),
+        w = self.maxWidth,
         h = self.button.h + (self.padding.y * 2),
         bgColor = self.backgroundColor,
         fontColor = self.labelColor    
@@ -142,20 +165,17 @@ function vPrompt:SetBackground()
 end
 
 function vPrompt:Draw()
-
     if self.canInteract then
-        if self.background.w < (self.labelTextWidth + self.button.w + (self.padding.x * 3) + (self.margin * 2)) then
+        if self.background.w < self.maxWidth then
             self.background.w = self.background.w + 0.008
-        else
-            -- self.background.w = self.labelTextWidth + self.button.w + (self.padding.x * 3) + (self.margin * 2)
         end
 
         self.background.fontColor.a = 255
     else
-        if self.background.w > (self.button.w + (self.padding.x * 2)) then
+        if self.background.w > self.minWidth then
             self.background.w = self.background.w - 0.008
         else
-            self.background.w = self.button.w + (self.padding.x * 2)
+            self.background.w = self.minWidth
         end
 
         self.background.fontColor.a = 0
@@ -164,9 +184,11 @@ function vPrompt:Draw()
     self.button.x = self.origin.x - (self.background.w / 2) + (self.button.w / 2) + self.padding.x
     self.button.text.x = self.button.x
 
+    -- Render the boxes and text
     self:RenderElement(self.label, self.background)
     self:RenderElement(self.keyLabel, self.button, true)
 
+    -- Draw keypress effect
     if self.pressed then
         self.highlight.w = self.highlight.w + (0.0005 * self.sw) / self.sw
         self.highlight.h = self.highlight.h + (0.0005 * self.sw) / self.sh
@@ -206,41 +228,59 @@ function vPrompt:CreateThread()
             local letSleep = true
             local pcoords = GetEntityCoords(player)
 
-            if self.entity then
+            if self.entity then -- Entity was set in the options so track it's coords
                 self.coords = GetEntityCoords(self.entity)
-            elseif self.boneEntity then
-                self.coords = GetWorldPositionOfEntityBone(self.boneEntity, self.boneIndex)            
+            elseif self.boneEntity then -- Entity bone was set in the options so track it's coords
+                self.coords = GetWorldPositionOfEntityBone(self.boneEntity, self.boneIndex)
+            else
+                -- Coordinates were set in the options so we don't have to do anything     
             end
             
+            -- Check distance between player and coords
+            -- There's a place in hell for people that use the Vdist() or GetDistanceBetweenCoords() natives!!!!
             local dist = #(self.coords - pcoords)
     
+            -- Check player is within draw distance
             if dist < self.drawDistance then
-                if self.canDraw() then
+                local canDraw = self.canDraw()
+
+                -- Can we draw?
+                if canDraw then
                     letSleep = false
+
+                    -- Render the elements
                     self:Draw()
                     
+                    -- Instance was previously hidden, but isn't now
                     if not self.visible then
                         self.visible = true
 
+                        -- Fire the 'show' event
                         if self.callbacks.show then
                             self.callbacks.show()
                         end
                     end
                     
+                    -- Check player is within interact distance
                     if dist < self.interactDistance then
 
+                        -- We weren't within the draw distance previously, but have now entered
                         if not self.InInteractionArea then
                             self.InInteractionArea = true
 
+                            -- Fire 'enterInteractZone' event
                             if self.callbacks.enterInteractZone then
                                 self.callbacks.enterInteractZone()
                             end
                         end
 
                         self.canInteract = true
+
+                        -- Detect keypress
                         if IsControlJustPressed(0, self.key) then
                             self.pressed = true
 
+                            -- Fire 'interact' event
                             if self.callbacks.interact then
                                 self.callbacks.interact()
                             end
@@ -248,9 +288,11 @@ function vPrompt:CreateThread()
                     else
                         self.canInteract = false
 
+                        -- We were within the interact distance previously, but have now left
                         if self.InInteractionArea then
                             self.InInteractionArea = false
         
+                            -- Fire 'exitInteractZone' event
                             if self.callbacks.exitInteractZone then
                                 self.callbacks.exitInteractZone()
                             end
@@ -258,20 +300,25 @@ function vPrompt:CreateThread()
                     end
                 end
             else
+                -- We were within the draw distance previously, but have now left
                 if self.visible then
                     self.visible = false
+
+                    -- Fire 'hide' event
                     if self.callbacks.hide then
                         self.callbacks.hide()
                     end
                 end               
             end
     
+            -- Let the thread sleep
             if letSleep then
                 Citizen.Wait(1000)
             end
     
             Citizen.Wait(0)
 
+            -- For killing the thread when the instance is destroyed
             if self.stop then return end
         end
     end)
@@ -300,10 +347,19 @@ function vPrompt:RenderElement(text, box, centered)
 end
 
 function vPrompt:Destroy(event, cb)
+    -- Kill the thread
     self.stop = true
+
+    -- Remove callbacks
     self.callbacks = {}
 end
 
 function vPrompt:On(event, cb)
+    -- Check event name is a string
+    assert(type(event) == 'string', string.format("^1Invalid type for param: 'event' | Expected 'string', got %s ", type(event)))
+
+    -- Check if event is already registered
+    assert(self.callbacks[event] == nil, string.format("^1Event '%s' already registered", event))
+
     self.callbacks[event] = cb
 end
