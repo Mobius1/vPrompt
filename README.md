@@ -5,6 +5,8 @@
 - [Usage](#usage)
 - [Events](#events)
 - [Options](#options)
+- 
+---
 
 ## Requirements
 * None!
@@ -20,6 +22,8 @@ client_scripts {
     ...
 }
 ```
+
+---
 
 ## Usage
 Create prompt for coords:
@@ -46,6 +50,7 @@ local myPrompt = vPrompt:Create({
 
 Create prompt for entity bone:
 ```lua
+local vehicle = GetClosestVehicle(x, y, z, 5.00, 0, 70)
 local myPrompt = vPrompt:Create({
     key = "E",
     label = "Pick Doorlock",
@@ -61,15 +66,9 @@ Destroy an instance:
 myPrompt:Destroy()
 ```
 
-If you need to restart a resource that has an instance of `vPrompt` then use the `Destroy()` method as follows:
+NOTE: The instance is automatically destroyed if the resource using it is stopped / restarted
 
-```lua
-AddEventHandler('onResourceStop', function(resource)
-    if resource == GetCurrentResourceName() then
-        myPrompt:Destroy()
-    end
-end)
-```
+---
 
 ## Events
 
@@ -96,6 +95,8 @@ myPrompt:On('hide', function()
     -- Do something when the prompt gets hidden
 end)
 ```
+
+---
 
 ## Options
 ```lua

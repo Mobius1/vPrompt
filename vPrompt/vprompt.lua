@@ -83,6 +83,12 @@ function vPrompt:Create(options)
     obj:SetBackground()
     obj:CreateThread()
 
+    AddEventHandler('onResourceStop', function(resource)
+        if resource == GetCurrentResourceName() then
+            obj:Destroy()
+        end
+    end)
+
    return obj
 end
 
