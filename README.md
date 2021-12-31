@@ -1,6 +1,8 @@
 # vPrompt
  3D Interactive Prompts for FiveM
 
+![vPrompt](https://i.imgur.com/a7QwgLD.gif)
+
 ---
 
 
@@ -58,6 +60,7 @@ Create prompt for entity bone:
 local player = PlayerPedId()
 local coords = GetEntityCoords(player)
 local vehicle = GetClosestVehicle(coords.x, coords.y, coords.z, 5.00, 0, 70)
+
 local myPrompt = vPrompt:Create({
     key = "E",
     label = "Pick Doorlock",
