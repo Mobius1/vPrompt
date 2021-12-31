@@ -222,6 +222,15 @@ function vPrompt:CreateThread()
                     end
                     
                     if dist < self.interactDistance then
+
+                        if not self.InInteractionArea then
+                            self.InInteractionArea = true
+
+                            if self.callbacks.enterInteractZone then
+                                self.callbacks.enterInteractZone()
+                            end
+                        end
+
                         self.canInteract = true
                         if IsControlJustPressed(0, self.key) then
                             self.pressed = true
@@ -232,6 +241,14 @@ function vPrompt:CreateThread()
                         end
                     else
                         self.canInteract = false
+
+                        if self.InInteractionArea then
+                            self.InInteractionArea = false
+        
+                            if self.callbacks.exitInteractZone then
+                                self.callbacks.exitInteractZone()
+                            end
+                        end                         
                     end
                 end
             else
@@ -240,7 +257,7 @@ function vPrompt:CreateThread()
                     if self.callbacks.hide then
                         self.callbacks.hide()
                     end
-                end
+                end               
             end
     
             if letSleep then

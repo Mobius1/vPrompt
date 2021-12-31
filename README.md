@@ -80,11 +80,11 @@ myPrompt:On('interact', function()
     -- Do something when the player presses the key
 end)
 
-myPrompt:On('enterInteractionZone', function()
+myPrompt:On('enterInteractZone', function()
     -- Do something when the player enters the interaction zone
 end)
 
-myPrompt:On('exitInteractionZone', function()
+myPrompt:On('exitInteractZone', function()
     -- Do something when the player exits the interaction zone
 end)
 
