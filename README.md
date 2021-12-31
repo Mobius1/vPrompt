@@ -3,10 +3,11 @@
 
  ### Features
  * Customisable appearance and positioning
- * Smooth transition animations
  * Event emitter for easy listening of events
  * Built-in proximity sytem - no need for calculating distances
  * Supports most keys
+ * Animated reveal / hide
+ * Animated keypress effect
  * Resmon: 
     * `0.00ms` when not drawn
     * `0.07ms` when drawn (uses scaleform so can't reduce it any more)
