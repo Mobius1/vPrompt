@@ -114,7 +114,7 @@ local myPrompt = vPrompt:Create({
     buttonColor = { r = 255, g = 255, b = 255, a = 255 },   -- the button's background color
     buttonLabelColor = { r = 0, g = 0, b = 0, a = 255 },    -- the button's text color
     canDraw = function()
-        return true
+        -- this should return a boolean
     end
 })
 ```
