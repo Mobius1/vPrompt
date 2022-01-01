@@ -28,9 +28,11 @@ function vPrompt:Create(options)
         font = 0,
         scale = 0.4,
         origin = vector2(0, 0),
+        offset = vector3(0, 0, 0),
         margin = 0.008,
         padding = 0.004,
-        offsetY = 0.00,
+        fontOffset = 0.00,
+        buttonSize = 0.015,
         backgroundColor = { r = 0, g = 0, b = 0, a = 100 },
         labelColor = { r = 255, g = 255, b = 255, a = 255 },
         buttonColor = { r = 255, g = 255, b = 255, a = 255 },
@@ -49,10 +51,12 @@ function vPrompt:Create(options)
     obj.keyLabel = options.key
     obj.font = options.font or defaultConfig.font
     obj.scale = options.scale or defaultConfig.scale
-    obj.origin = origin or defaultConfig.origin
+    obj.origin = options.origin or defaultConfig.origin
+    obj.offset = options.offset or defaultConfig.offset
     obj.margin = options.margin or defaultConfig.margin
     obj.padding = options.padding or defaultConfig.padding
-    obj.offsetY = options.offsetY or defaultConfig.offsetY
+    obj.fontOffset = options.fontOffset or defaultConfig.fontOffset
+    obj.buttonSize = options.buttonSize or defaultConfig.buttonSize
     obj.labelColor = options.labelColor or defaultConfig.labelColor
     obj.backgroundColor = options.backgroundColor or defaultConfig.backgroundColor
     obj.buttonColor = options.buttonColor or defaultConfig.buttonColor
@@ -78,15 +82,16 @@ function vPrompt:Create(options)
         assert(type(options.coords) == 'vector3', '^1Invalid vector3 value passed to "coords" option')
 
         obj.coords = options.coords       
+        obj.coords = obj.coords + obj.offset    
     end
 
     -- Handle offsets for native GTA:V fonts
     if obj.font == 1 then
-        obj.offsetY = 0.01
+        obj.fontOffset = 0.01
     elseif obj.font == 2 then
-        obj.offsetY = 0.009
+        obj.fontOffset = 0.009
     elseif obj.font == 4 or obj.font == 5 or obj.font == 6 or obj.font == 7 then
-        obj.offsetY = 0.008
+        obj.fontOffset = 0.008
     end
 
     -- Initialise
@@ -124,8 +129,8 @@ end
 
 function vPrompt:SetButton()
     self.button = {
-        w = (math.max(0.015, self.keyTextWidth) * self.sw) / self.sw,
-        h = (0.015 * self.sw) / self.sh,
+        w = (math.max(self.buttonSize, self.keyTextWidth) * self.sw) / self.sw,
+        h = (self.buttonSize * self.sw) / self.sh,
         bgColor = self.buttonColor,
         fontColor = self.buttonLabelColor          
     }
@@ -155,12 +160,12 @@ function vPrompt:SetBackground()
     
     self.button.text = {
         x = self.button.x,
-        y = self.button.y - self.textHeight + self.offsetY
+        y = self.button.y - self.textHeight + self.fontOffset
     }
     
     self.background.text = {
         x = self.button.x + (self.button.w / 2) + self.margin + self.padding.x,
-        y = self.button.y - self.textHeight + self.offsetY
+        y = self.button.y - self.textHeight + self.fontOffset
     }
 end
 
@@ -192,7 +197,7 @@ function vPrompt:Draw()
     if self.pressed then
         self.highlight.w = self.highlight.w + (0.0005 * self.sw) / self.sw
         self.highlight.h = self.highlight.h + (0.0005 * self.sw) / self.sh
-        self.highlight.a = self.highlight.a - 20
+        self.highlight.a = self.highlight.a - 18
 
         SetDrawOrigin(self.coords.x, self.coords.y, self.coords.z, 0)
         DrawRect(self.highlight.x, self.highlight.y, self.highlight.w, self.highlight.h, self.button.bgColor.r, self.button.bgColor.g, self.button.bgColor.b, self.highlight.a)
@@ -230,8 +235,12 @@ function vPrompt:CreateThread()
 
             if self.entity then -- Entity was set in the options so track it's coords
                 self.coords = GetEntityCoords(self.entity)
+
+                self.coords = self.coords + self.offset
             elseif self.boneEntity then -- Entity bone was set in the options so track it's coords
                 self.coords = GetWorldPositionOfEntityBone(self.boneEntity, self.boneIndex)
+
+                self.coords = self.coords + self.offset
             else
                 -- Coordinates were set in the options so we don't have to do anything     
             end
