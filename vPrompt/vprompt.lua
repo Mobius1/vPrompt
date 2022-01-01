@@ -31,7 +31,7 @@ function vPrompt:Create(options)
         offset = vector3(0, 0, 0),
         margin = 0.008,
         padding = 0.004,
-        fontOffset = 0.00,
+        textOffset = 0.00,
         buttonSize = 0.015,
         backgroundColor = { r = 0, g = 0, b = 0, a = 100 },
         labelColor = { r = 255, g = 255, b = 255, a = 255 },
@@ -55,7 +55,7 @@ function vPrompt:Create(options)
     obj.offset = options.offset or defaultConfig.offset
     obj.margin = options.margin or defaultConfig.margin
     obj.padding = options.padding or defaultConfig.padding
-    obj.fontOffset = options.fontOffset or defaultConfig.fontOffset
+    obj.textOffset = options.textOffset or defaultConfig.textOffset
     obj.buttonSize = options.buttonSize or defaultConfig.buttonSize
     obj.labelColor = options.labelColor or defaultConfig.labelColor
     obj.backgroundColor = options.backgroundColor or defaultConfig.backgroundColor
@@ -87,11 +87,11 @@ function vPrompt:Create(options)
 
     -- Handle offsets for native GTA:V fonts
     if obj.font == 1 then
-        obj.fontOffset = 0.01
+        obj.textOffset = 0.01
     elseif obj.font == 2 then
-        obj.fontOffset = 0.009
+        obj.textOffset = 0.009
     elseif obj.font == 4 or obj.font == 5 or obj.font == 6 or obj.font == 7 then
-        obj.fontOffset = 0.008
+        obj.textOffset = 0.008
     end
 
     -- Initialise
@@ -160,12 +160,12 @@ function vPrompt:SetBackground()
     
     self.button.text = {
         x = self.button.x,
-        y = self.button.y - self.textHeight + self.fontOffset
+        y = self.button.y - self.textHeight + self.textOffset
     }
     
     self.background.text = {
         x = self.button.x + (self.button.w / 2) + self.margin + self.padding.x,
-        y = self.button.y - self.textHeight + self.fontOffset
+        y = self.button.y - self.textHeight + self.textOffset
     }
 end
 

@@ -134,7 +134,7 @@ local myPrompt = vPrompt:Create({
     margin = 0.008,             -- The left / right margin for the label text  (percentage of screen)
     padding = 0.004,            -- the padding for the background box  (percentage of screen)
     buttonSize = 0.015,         -- The size of the button (percentage of screen)
-    fontOffset = 0.00,          -- y-offset for the text for custom fonts (GTAV native fonts are handled by the instance)
+    textOffset = 0.00,          -- y-offset for the text for custom fonts (GTAV native fonts are handled by the instance)
     offset = vector3(0, 0, 0)   -- The offset to apply to the prompt position
     backgroundColor = { r = 0, g = 0, b = 0, a = 100 },     -- background box color
     labelColor = { r = 255, g = 255, b = 255, a = 255 },    -- the label color
