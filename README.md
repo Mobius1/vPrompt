@@ -20,8 +20,9 @@
 - [Demos](#demos)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Events](#events)
 - [Options](#options)
+- [Methods](#methods)
+- [Events](#events)
 ---
 
 ## Demos
@@ -85,12 +86,67 @@ local myPrompt = vPrompt:Create({
 })
 ```
 
-Destroy an instance:
+NOTE: The instance is automatically destroyed if the resource using it is stopped / restarted
+
+---
+
+## Options
+```lua
+local myPrompt = vPrompt:Create({
+    key = 'E',                  -- the key to be pressed
+    label = 'Press Me',         -- the label
+    drawDistance = 4.0,         -- The distance from the coords / entity / bone before the prompt is drawn
+    interactDistance - 2.0,     -- The distance from the coords / entity / bone before the player can interact    
+    font = 0,                   -- the font to be used
+    scale = 0.4,                -- the font scale
+    margin = 0.008,             -- The left / right margin for the label text  (percentage of screen)
+    padding = 0.004,            -- the padding for the background box  (percentage of screen)
+    buttonSize = 0.015,         -- The size of the button (percentage of screen)
+    textOffset = 0.00,          -- y-offset for the text for custom fonts (GTAV native fonts are handled by the instance)
+    offset = vector3(0, 0, 0)   -- The offset to apply to the prompt position
+    backgroundColor = { r = 0, g = 0, b = 0, a = 100 },     -- background box color
+    labelColor = { r = 255, g = 255, b = 255, a = 255 },    -- the label color
+    buttonColor = { r = 255, g = 255, b = 255, a = 255 },   -- the button's background color
+    buttonLabelColor = { r = 0, g = 0, b = 0, a = 255 },    -- the button's text color
+    canDraw = function()
+        -- this should return a boolean
+    end,
+    debug = false -- Draws debug markers to show draw and interact distances
+})
+```
+
+---
+
+## Methods
+
+#### Update key
+```lua
+myPrompt:SetKey(
+    key --[[ string ]]
+)
+```
+
+#### Update label
+```lua
+myPrompt:SetLabel(
+    label --[[ string ]]
+)
+```
+
+#### Update background colour
+```lua
+myPrompt:SetBackgroundColor(
+    r --[[ integer ]],
+    g --[[ integer ]],
+    b --[[ integer ]],
+    a --[[ integer ]]
+)
+```
+
+#### Destroy the instance
 ```lua
 myPrompt:Destroy()
 ```
-
-NOTE: The instance is automatically destroyed if the resource using it is stopped / restarted
 
 ---
 
@@ -118,30 +174,4 @@ end)
 myPrompt:On('hide', function()
     -- Do something when the prompt gets hidden
 end)
-```
-
----
-
-## Options
-```lua
-local myPrompt = vPrompt:Create({
-    key = 'E',                  -- the key to be pressed
-    label = 'Press Me',         -- the label
-    drawDistance = 4.0,         -- The distance from the coords / entity / bone before the prompt is drawn
-    interactDistance - 2.0,     -- The distance from the coords / entity / bone before the player can interact    
-    font = 0,                   -- the font to be used
-    scale = 0.4,                -- the font scale
-    margin = 0.008,             -- The left / right margin for the label text  (percentage of screen)
-    padding = 0.004,            -- the padding for the background box  (percentage of screen)
-    buttonSize = 0.015,         -- The size of the button (percentage of screen)
-    textOffset = 0.00,          -- y-offset for the text for custom fonts (GTAV native fonts are handled by the instance)
-    offset = vector3(0, 0, 0)   -- The offset to apply to the prompt position
-    backgroundColor = { r = 0, g = 0, b = 0, a = 100 },     -- background box color
-    labelColor = { r = 255, g = 255, b = 255, a = 255 },    -- the label color
-    buttonColor = { r = 255, g = 255, b = 255, a = 255 },   -- the button's background color
-    buttonLabelColor = { r = 0, g = 0, b = 0, a = 255 },    -- the button's text color
-    canDraw = function()
-        -- this should return a boolean
-    end
-})
 ```

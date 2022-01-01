@@ -9,12 +9,33 @@ local Keys = {
     ["LEFT"] = 174, ["RIGHT"] = 175, ["UP"] = 27, ["DOWN"] = 173
 }
 
+-- Default config for set-up
+local defaultConfig = {
+    debug = false,
+    font = 0,
+    scale = 0.4,
+    origin = vector2(0, 0),
+    offset = vector3(0, 0, 0),
+    margin = 0.008,
+    padding = 0.004,
+    textOffset = 0.00,
+    buttonSize = 0.015,
+    backgroundColor = { r = 0, g = 0, b = 0, a = 100 },
+    labelColor = { r = 255, g = 255, b = 255, a = 255 },
+    buttonColor = { r = 255, g = 255, b = 255, a = 255 },
+    buttonLabelColor = { r = 0, g = 0, b = 0, a = 255 },
+    drawDistance = 4.0,
+    interactDistance = 2.0,
+    canDraw = function() return true end,
+}
+
 vPrompt = {}
 vPrompt.__index = vPrompt
 
+
 ------
 --
--- @param options      - table of options
+-- @param options   table      - User-defined options
 --
 -- Create new vPrompt instance
 ------
@@ -23,83 +44,10 @@ function vPrompt:Create(options)
 
     setmetatable(obj, vPrompt)
 
-    -- Default config for set-up
-    local defaultConfig = {
-        font = 0,
-        scale = 0.4,
-        origin = vector2(0, 0),
-        offset = vector3(0, 0, 0),
-        margin = 0.008,
-        padding = 0.004,
-        textOffset = 0.00,
-        buttonSize = 0.015,
-        backgroundColor = { r = 0, g = 0, b = 0, a = 100 },
-        labelColor = { r = 255, g = 255, b = 255, a = 255 },
-        buttonColor = { r = 255, g = 255, b = 255, a = 255 },
-        buttonLabelColor = { r = 0, g = 0, b = 0, a = 255 },
-        drawDistance = 4.0,
-        interactDistance = 2.0,
-        canDraw = function() return true end,
-    }
-
-    -- Check for valid key
-    assert(Keys[options.key] ~= nil, '^1Invalid key:'.. options.key)
-
-    -- Merge user-defined options
-    obj.label = options.label
-    obj.key = Keys[options.key]
-    obj.keyLabel = options.key
-    obj.font = options.font or defaultConfig.font
-    obj.scale = options.scale or defaultConfig.scale
-    obj.origin = options.origin or defaultConfig.origin
-    obj.offset = options.offset or defaultConfig.offset
-    obj.margin = options.margin or defaultConfig.margin
-    obj.padding = options.padding or defaultConfig.padding
-    obj.textOffset = options.textOffset or defaultConfig.textOffset
-    obj.buttonSize = options.buttonSize or defaultConfig.buttonSize
-    obj.labelColor = options.labelColor or defaultConfig.labelColor
-    obj.backgroundColor = options.backgroundColor or defaultConfig.backgroundColor
-    obj.buttonColor = options.buttonColor or defaultConfig.buttonColor
-    obj.buttonLabelColor = options.buttonLabelColor or defaultConfig.buttonLabelColor
-    obj.drawDistance = options.drawDistance or defaultConfig.drawDistance
-    obj.interactDistance = options.interactDistance or defaultConfig.interactDistance
-    obj.canDraw = options.canDraw or defaultConfig.canDraw
-    obj.callbacks = {}
-
-    if options.entity then
-        -- Check for valid entity
-        assert(DoesEntityExist(options.entity), '^1Invalid entity passed to "entity" option')
-
-        obj.entity = options.entity
-    elseif options.bone then
-        -- Check for valid entity
-        assert(DoesEntityExist(options.bone.entity), '^1Invalid entity passed to "bone.entity" option')
-
-        obj.boneEntity = options.bone.entity
-        obj.boneIndex = GetEntityBoneIndexByName(options.bone.entity, options.bone.name)
-    else
-        -- Check for valid vector3 coords
-        assert(type(options.coords) == 'vector3', '^1Invalid vector3 value passed to "coords" option')
-
-        obj.coords = options.coords       
-        obj.coords = obj.coords + obj.offset    
-    end
-
-    -- Handle offsets for native GTA:V fonts
-    if obj.font == 1 then
-        obj.textOffset = 0.01
-    elseif obj.font == 2 then
-        obj.textOffset = 0.009
-    elseif obj.font == 4 or obj.font == 5 or obj.font == 6 or obj.font == 7 then
-        obj.textOffset = 0.008
-    end
-
     -- Initialise
-    obj:GetDimensions()
-    obj:SetButton()
-    obj:SetPadding()
-    obj:SetBackground()
-    obj:CreateThread()
+    obj:_Init(options)
+    obj:Update()
+    obj:_CreateThread()
 
     -- Make sure we destroy the instance if the resource stops
     AddEventHandler('onResourceStop', function(resource)
@@ -111,65 +59,224 @@ function vPrompt:Create(options)
    return obj
 end
 
-function vPrompt:GetDimensions()
+function vPrompt:_Init(cfg)
+    -- Check for valid key
+    assert(Keys[cfg.key] ~= nil, '^1Invalid key:'.. cfg.key)
+
+    self.cfg = {}
+
+
+    -- Merge user-defined options
+    self.cfg.debug = cfg.debug or defaultConfig.debug
+    self.cfg.label = tostring(cfg.label)
+    self.cfg.key = Keys[cfg.key]
+    self.cfg.keyLabel = tostring(cfg.key)
+    self.cfg.font = cfg.font or defaultConfig.font
+    self.cfg.scale = cfg.scale or defaultConfig.scale
+    self.cfg.origin = cfg.origin or defaultConfig.origin
+    self.cfg.offset = cfg.offset or defaultConfig.offset
+    self.cfg.margin = cfg.margin or defaultConfig.margin
+    self.cfg.padding = cfg.padding or defaultConfig.padding
+    self.cfg.textOffset = cfg.textOffset or defaultConfig.textOffset
+    self.cfg.buttonSize = cfg.buttonSize or defaultConfig.buttonSize
+    self.cfg.labelColor = cfg.labelColor or defaultConfig.labelColor
+    self.cfg.backgroundColor = cfg.backgroundColor or defaultConfig.backgroundColor
+    self.cfg.buttonColor = cfg.buttonColor or defaultConfig.buttonColor
+    self.cfg.buttonLabelColor = cfg.buttonLabelColor or defaultConfig.buttonLabelColor
+    self.cfg.drawDistance = cfg.drawDistance or defaultConfig.drawDistance
+    self.cfg.interactDistance = cfg.interactDistance or defaultConfig.interactDistance
+    self.cfg.canDraw = cfg.canDraw or defaultConfig.canDraw
+    self.cfg.callbacks = {}
+
+    if cfg.entity then
+        -- Check for valid entity
+        assert(DoesEntityExist(cfg.entity), '^1Invalid entity passed to "entity" option')
+
+        self.cfg.entity = cfg.entity
+    elseif cfg.bone then
+        -- Check for valid entity
+        assert(DoesEntityExist(cfg.bone.entity), '^1Invalid entity passed to "bone.entity" option')
+
+        self.cfg.boneEntity = cfg.bone.entity
+        self.cfg.boneIndex = GetEntityBoneIndexByName(cfg.bone.entity, cfg.bone.name)
+    elseif cfg.coords then
+        -- Check for valid vector3 coords
+        assert(type(cfg.coords) == 'vector3', '^1Invalid vector3 value passed to "coords" option')
+
+        self.cfg.coords = cfg.coords       
+        self.cfg.coords = self.cfg.coords + self.cfg.offset    
+    end
+
+    -- Handle offsets for native GTA:V fonts
+    if self.cfg.font == 1 then
+        self.cfg.textOffset = 0.01
+    elseif self.cfg.font == 2 then
+        self.cfg.textOffset = 0.009
+    elseif self.cfg.font == 4 or self.cfg.font == 5 or self.cfg.font == 6 or self.cfg.font == 7 then
+        self.cfg.textOffset = 0.008
+    end
+end
+
+------
+--
+-- Updates the dimensions
+--
+-- @return void
+--
+------
+function vPrompt:Update()
+    self:_GetDimensions()
+    self:_SetButton()
+    self:_SetPadding()
+    self:_SetBackground()
+end
+
+------
+--
+-- Updates the key
+--
+-- @param label     string        - the new key
+--
+-- @return void
+--
+------
+function vPrompt:SetKey(key)
+    -- Check for valid key
+    assert(Keys[key] ~= nil, '^1Invalid key:'.. key)
+
+    if key ~= self.cfg.keyLabel then
+        self.cfg.key        = Keys[key]
+        self.cfg.keyLabel   = tostring(key)
+    end
+end
+
+------
+--
+-- Updates the label
+--
+-- @param label     string        - the new label
+--
+-- @return void
+--
+------
+function vPrompt:SetLabel(label)
+    if label ~= self.cfg.label then
+        self.cfg.label = label
+        self:Update()
+    end
+end
+
+------
+--
+-- Updates the label
+--
+-- @param label     string        - the new label
+--
+-- @return void
+--
+------
+function vPrompt:SetBackgroundColor(r, g, b, a)
+    self.cfg.backgroundColor.r = r
+    self.cfg.backgroundColor.g = g
+    self.cfg.backgroundColor.b = b
+    self.cfg.backgroundColor.a = a
+end
+
+------
+--
+-- Destroys the instance
+--
+-- @return void
+--
+------
+function vPrompt:Destroy()
+    -- Kill the thread
+    self.stop = true
+
+    -- Remove callbacks
+    self.cfg.callbacks = {}
+end
+
+------
+--
+-- Add event listener
+--
+-- @param event     string        - event name
+-- @param cb        function      - event callback
+--
+-- @return void
+--
+------
+function vPrompt:On(event, cb)
+    -- Check event name is a string
+    assert(type(event) == 'string', string.format("^1Invalid type for param: 'event' | Expected 'string', got %s ", type(event)))
+
+    -- Check if event is already registered
+    assert(self.cfg.callbacks[event] == nil, string.format("^1Event '%s' already registered", event))
+
+    self.cfg.callbacks[event] = cb
+end
+
+function vPrompt:_GetDimensions()
     local sw, sh = GetActiveScreenResolution()
     
     -- Get width of button
-    self.keyTextWidth = self:GetTextWidth(self.keyLabel) 
+    self.keyTextWidth = self:_GetTextWidth(self.cfg.keyLabel) 
 
     -- Get width of background box
-    self.labelTextWidth = self:GetTextWidth(self.label) 
+    self.labelTextWidth = self:_GetTextWidth(self.cfg.label) 
     
     -- Get the font height
-    self.textHeight = GetRenderedCharacterHeight(self.scale, self.font)
+    self.textHeight = GetRenderedCharacterHeight(self.cfg.scale, self.cfg.font)
 
     self.sw = sw
     self.sh = sh 
 end
 
-function vPrompt:SetButton()
+function vPrompt:_SetButton()
     self.button = {
-        w = (math.max(self.buttonSize, self.keyTextWidth) * self.sw) / self.sw,
-        h = (self.buttonSize * self.sw) / self.sh,
-        bgColor = self.buttonColor,
-        fontColor = self.buttonLabelColor          
+        w = (math.max(self.cfg.buttonSize, self.keyTextWidth) * self.sw) / self.sw,
+        h = (self.cfg.buttonSize * self.sw) / self.sh,
+        bgColor = self.cfg.buttonColor,
+        fontColor = self.cfg.buttonLabelColor          
     }
 end
 
-function vPrompt:SetPadding()
-    local padding = self.padding
-    self.padding = {
+function vPrompt:_SetPadding()
+    local padding = self.cfg.padding
+
+    self.boxPadding = {
         x = (padding * self.sw) / self.sw,
         y = (padding * self.sw) / self.sh
     }
 end
 
-function vPrompt:SetBackground()
-    self.minWidth = self.button.w + (self.padding.x * 2)
-    self.maxWidth = self.labelTextWidth + self.button.w + (self.padding.x * 3) + (self.margin * 2)
+function vPrompt:_SetBackground()
+    self.minWidth = self.button.w + (self.boxPadding.x * 2)
+    self.maxWidth = self.labelTextWidth + self.button.w + (self.boxPadding.x * 3) + (self.cfg.margin * 2)
 
     self.background = {
         w = self.maxWidth,
-        h = self.button.h + (self.padding.y * 2),
-        bgColor = self.backgroundColor,
-        fontColor = self.labelColor    
+        h = self.button.h + (self.boxPadding.y * 2),
+        bgColor = self.cfg.backgroundColor,
+        fontColor = self.cfg.labelColor    
     }
 
-    self.button.x = self.origin.x - (self.background.w / 2) + (self.button.w / 2) + self.padding.x
-    self.button.y = self.origin.y - (self.background.h / 2) + (self.button.h / 2) + self.padding.y 
+    self.button.x = self.cfg.origin.x - (self.background.w / 2) + (self.button.w / 2) + self.boxPadding.x
+    self.button.y = self.cfg.origin.y - (self.background.h / 2) + (self.button.h / 2) + self.boxPadding.y 
     
     self.button.text = {
         x = self.button.x,
-        y = self.button.y - self.textHeight + self.textOffset
+        y = self.button.y - self.textHeight + self.cfg.textOffset
     }
     
     self.background.text = {
-        x = self.button.x + (self.button.w / 2) + self.margin + self.padding.x,
-        y = self.button.y - self.textHeight + self.textOffset
+        x = self.button.x + (self.button.w / 2) + self.cfg.margin + self.boxPadding.x,
+        y = self.button.y - self.textHeight + self.cfg.textOffset
     }
 end
 
-function vPrompt:Draw()
+function vPrompt:_Draw()
     if self.canInteract then
         if self.background.w < self.maxWidth then
             self.background.w = self.background.w + 0.008
@@ -186,12 +293,12 @@ function vPrompt:Draw()
         self.background.fontColor.a = 0
     end
 
-    self.button.x = self.origin.x - (self.background.w / 2) + (self.button.w / 2) + self.padding.x
+    self.button.x = self.cfg.origin.x - (self.background.w / 2) + (self.button.w / 2) + self.boxPadding.x
     self.button.text.x = self.button.x
 
     -- Render the boxes and text
-    self:RenderElement(self.label, self.background)
-    self:RenderElement(self.keyLabel, self.button, true)
+    self:_RenderElement(self.cfg.label, self.background)
+    self:_RenderElement(self.cfg.keyLabel, self.button, true)
 
     -- Draw keypress effect
     if self.pressed then
@@ -199,7 +306,7 @@ function vPrompt:Draw()
         self.highlight.h = self.highlight.h + (0.0005 * self.sw) / self.sh
         self.highlight.a = self.highlight.a - 18
 
-        SetDrawOrigin(self.coords.x, self.coords.y, self.coords.z, 0)
+        SetDrawOrigin(self.cfg.coords.x, self.cfg.coords.y, self.cfg.coords.z, 0)
         DrawRect(self.highlight.x, self.highlight.y, self.highlight.w, self.highlight.h, self.button.bgColor.r, self.button.bgColor.g, self.button.bgColor.b, self.highlight.a)
         ClearDrawOrigin()  
 
@@ -217,7 +324,7 @@ function vPrompt:Draw()
     end
 end
 
-function vPrompt:CreateThread()
+function vPrompt:_CreateThread()
     Citizen.CreateThread(function()
         local player = PlayerPedId()
 
@@ -233,65 +340,65 @@ function vPrompt:CreateThread()
             local letSleep = true
             local pcoords = GetEntityCoords(player)
 
-            if self.entity then -- Entity was set in the options so track it's coords
-                self.coords = GetEntityCoords(self.entity)
+            if self.cfg.entity then -- Entity was set in the options so track it's coords
+                self.cfg.coords = GetEntityCoords(self.cfg.entity)
 
-                self.coords = self.coords + self.offset
-            elseif self.boneEntity then -- Entity bone was set in the options so track it's coords
-                self.coords = GetWorldPositionOfEntityBone(self.boneEntity, self.boneIndex)
+                self.cfg.coords = self.cfg.coords + self.cfg.offset
+            elseif self.cfg.boneEntity then -- Entity bone was set in the options so track it's coords
+                self.cfg.coords = GetWorldPositionOfEntityBone(self.cfg.boneEntity, self.cfg.boneIndex)
 
-                self.coords = self.coords + self.offset
+                self.cfg.coords = self.cfg.coords + self.cfg.offset
             else
                 -- Coordinates were set in the options so we don't have to do anything     
             end
             
             -- Check distance between player and coords
             -- There's a place in hell for people that use the Vdist() or GetDistanceBetweenCoords() natives!!!!
-            local dist = #(self.coords - pcoords)
+            local dist = #(self.cfg.coords - pcoords)
     
             -- Check player is within draw distance
-            if dist < self.drawDistance then
-                local canDraw = self.canDraw()
+            if dist < self.cfg.drawDistance then
+                local canDraw = self.cfg.canDraw()
 
                 -- Can we draw?
                 if canDraw then
                     letSleep = false
 
                     -- Render the elements
-                    self:Draw()
+                    self:_Draw()
                     
                     -- Instance was previously hidden, but isn't now
                     if not self.visible then
                         self.visible = true
 
                         -- Fire the 'show' event
-                        if self.callbacks.show then
-                            self.callbacks.show()
+                        if self.cfg.callbacks.show then
+                            self.cfg.callbacks.show()
                         end
                     end
                     
                     -- Check player is within interact distance
-                    if dist < self.interactDistance then
+                    if dist < self.cfg.interactDistance then
 
                         -- We weren't within the interact distance previously, but have now entered
                         if not self.InInteractionArea then
                             self.InInteractionArea = true
 
                             -- Fire 'enterInteractZone' event
-                            if self.callbacks.enterInteractZone then
-                                self.callbacks.enterInteractZone()
+                            if self.cfg.callbacks.enterInteractZone then
+                                self.cfg.callbacks.enterInteractZone()
                             end
                         end
 
                         self.canInteract = true
 
                         -- Detect keypress
-                        if IsControlJustPressed(0, self.key) then
+                        if IsControlJustPressed(0, self.cfg.key) then
                             self.pressed = true
 
                             -- Fire 'interact' event
-                            if self.callbacks.interact then
-                                self.callbacks.interact()
+                            if self.cfg.callbacks.interact then
+                                self.cfg.callbacks.interact(dist, pcoords)
                             end
                         end
                     else
@@ -302,8 +409,8 @@ function vPrompt:CreateThread()
                             self.InInteractionArea = false
         
                             -- Fire 'exitInteractZone' event
-                            if self.callbacks.exitInteractZone then
-                                self.callbacks.exitInteractZone()
+                            if self.cfg.callbacks.exitInteractZone then
+                                self.cfg.callbacks.exitInteractZone()
                             end
                         end                         
                     end
@@ -314,10 +421,18 @@ function vPrompt:CreateThread()
                     self.visible = false
 
                     -- Fire 'hide' event
-                    if self.callbacks.hide then
-                        self.callbacks.hide()
+                    if self.cfg.callbacks.hide then
+                        self.cfg.callbacks.hide()
                     end
                 end               
+            end
+
+            if self.cfg.debug then
+                letSleep = false
+
+                local found, groundZ = GetGroundZFor_3dCoord(self.cfg.coords.x, self.cfg.coords.y, self.cfg.coords.z, false)
+                DrawMarker(1, self.cfg.coords.x, self.cfg.coords.y, groundZ, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, self.cfg.interactDistance * 2, self.cfg.interactDistance * 2, 1.0, 255, 255, 255, 100, false, true, 2, false, nil, nil, false)
+                DrawMarker(1, self.cfg.coords.x, self.cfg.coords.y, groundZ, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, self.cfg.drawDistance * 2, self.cfg.drawDistance * 2, 1.0, 255, 255, 255, 100, false, true, 2, false, nil, nil, false)                
             end
     
             -- Let the thread sleep
@@ -333,42 +448,24 @@ function vPrompt:CreateThread()
     end)
 end
 
-function vPrompt:GetTextWidth(text)
+function vPrompt:_GetTextWidth(text)
     BeginTextCommandGetWidth("STRING");
-    SetTextScale(self.scale, self.scale)
-    SetTextFont(self.font)
+    SetTextScale(self.cfg.scale, self.cfg.scale)
+    SetTextFont(self.cfg.font)
     SetTextEntry("STRING")    
     AddTextComponentString(text)
     return EndTextCommandGetWidth(1)    
 end
 
-function vPrompt:RenderElement(text, box, centered)
-    SetTextScale(self.scale, self.scale)
-    SetTextFont(self.font)
+function vPrompt:_RenderElement(text, box, centered)
+    SetTextScale(self.cfg.scale, self.cfg.scale)
+    SetTextFont(self.cfg.font)
     SetTextColour(box.fontColor.r, box.fontColor.g, box.fontColor.b, box.fontColor.a)
     SetTextEntry("STRING")
     SetTextCentre(centered ~= nil)
     AddTextComponentString(text)
-    SetDrawOrigin(self.coords.x, self.coords.y, self.coords.z, 0)
+    SetDrawOrigin(self.cfg.coords.x, self.cfg.coords.y, self.cfg.coords.z, 0)
     EndTextCommandDisplayText(box.text.x, box.text.y)
     DrawRect(box.x, box.y, box.w, box.h, box.bgColor.r, box.bgColor.g, box.bgColor.b, box.bgColor.a)
     ClearDrawOrigin()
-end
-
-function vPrompt:Destroy(event, cb)
-    -- Kill the thread
-    self.stop = true
-
-    -- Remove callbacks
-    self.callbacks = {}
-end
-
-function vPrompt:On(event, cb)
-    -- Check event name is a string
-    assert(type(event) == 'string', string.format("^1Invalid type for param: 'event' | Expected 'string', got %s ", type(event)))
-
-    -- Check if event is already registered
-    assert(self.callbacks[event] == nil, string.format("^1Event '%s' already registered", event))
-
-    self.callbacks[event] = cb
 end
