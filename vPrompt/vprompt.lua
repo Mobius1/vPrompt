@@ -264,7 +264,7 @@ function vPrompt:CreateThread()
                     -- Check player is within interact distance
                     if dist < self.interactDistance then
 
-                        -- We weren't within the draw distance previously, but have now entered
+                        -- We weren't within the interact distance previously, but have now entered
                         if not self.InInteractionArea then
                             self.InInteractionArea = true
 

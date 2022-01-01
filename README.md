@@ -131,7 +131,7 @@ local myPrompt = vPrompt:Create({
     interactDistance - 2.0, -- The distance from the coords / entity / bone before the player can interact    
     font = 0,               -- the font to be used
     scale = 0.4,            -- the font scale
-    margin - 0.008,         -- The left / right margin for the label text
+    margin = 0.008,         -- The left / right margin for the label text
     padding = 0.004,        -- the padding for the background box
     offsetY = 0.00,         -- y-offset for the text (for custom fonts - GTAV native fonts are handled by the instance)
     backgroundColor = { r = 0, g = 0, b = 0, a = 100 },     -- background box color
