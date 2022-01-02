@@ -1,16 +1,20 @@
 # vPrompt
  3D Interactive Prompts for FiveM
 
+vPrompt draws floating prompt elements like seen in ESX's `DrawText3D()` method, but with an added button element and background. vPrompt automatically detects when a player is withing interaction range and listens for when the defined key is pressed. This removes the need to write extra logic in your resource for calculating the player's proximty to the coords / entity / bone and also removes the need for extra keypress logic.
+
+
  ### Features
  * Customisable appearance and positioning
  * Event emitter for easy listening of events
- * Built-in proximity sytem - no need for calculating distances
- * Supports most keys
+ * Detects keypress when in interact range
+ * Proximity system - no need for extra logic in your code for calculating distances
  * Animated reveal / hide
  * Animated keypress effect
  * Resmon: 
-    * `0.00ms` when not drawn
-    * `0.07ms` when drawn (uses scaleform so can't reduce it any more)
+    * `0.00ms` when not in draw range
+    * `0.07ms` when drawn / in draw / interact range (uses scaleform so can't reduce it any more)
+
 
 ![vPrompt](https://i.imgur.com/a7QwgLD.gif)
 
