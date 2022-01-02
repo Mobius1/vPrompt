@@ -105,11 +105,13 @@ function vPrompt:_Init(cfg)
         -- Check for valid vector3 coords
         assert(type(self.cfg.coords) == 'vector3', '^1Invalid vector3 value passed to "coords" option')
     
+        -- Apply the offset here otherwise if we do it in the main loop it'll move by the offset every iteration
         self.cfg.coords = self.cfg.coords + self.cfg.offset    
     end
 
+    -- 
     if self.cfg.drawMarker ~= false then
-        assert(type(self.cfg.drawMarker) == 'table', '^1Option "drawMarker" must be table of marker options')
+        assert(type(self.cfg.drawMarker) == 'table', '^1Option "drawMarker" must be table of options')
 
         self.cfg.marker = mergeTables(defaultMarker, self.cfg.drawMarker)   
     end
@@ -136,7 +138,7 @@ end
 
 ------
 --
--- Updates the dimensions
+-- Updates the dimensions and positions
 --
 -- @return void
 --
@@ -356,6 +358,8 @@ function vPrompt:_SetBackground()
         x = self.button.x + (self.button.w / 2) + self.cfg.margin + self.boxPadding.x,
         y = self.button.y - self.textHeight + self.cfg.textOffset
     }
+
+    self.background.w = self.minWidth
 end
 
 function vPrompt:_Draw()
@@ -389,15 +393,13 @@ function vPrompt:_Draw()
         self.highlight.a = self.highlight.a - 18
 
         SetDrawOrigin(self.cfg.coords.x, self.cfg.coords.y, self.cfg.coords.z, 0)
-        DrawRect(self.highlight.x, self.highlight.y, self.highlight.w, self.highlight.h, self.button.bgColor.r, self.button.bgColor.g, self.button.bgColor.b, self.highlight.a)
+        DrawRect(self.button.x, self.button.y, self.highlight.w, self.highlight.h, self.button.bgColor.r, self.button.bgColor.g, self.button.bgColor.b, self.highlight.a)
         ClearDrawOrigin()  
 
         if self.highlight.a <= 0 then
             self.pressed = false
 
             self.highlight = {
-                x = self.button.x,
-                y = self.button.y,
                 w = self.button.w,
                 h = self.button.h,
                 a = 255
@@ -411,8 +413,6 @@ function vPrompt:_CreateThread()
         local player = PlayerPedId()
 
         self.highlight = {
-            x = self.button.x,
-            y = self.button.y,
             w = self.button.w,
             h = self.button.h,
             a = 255
