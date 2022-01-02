@@ -125,7 +125,6 @@ function vPrompt:_Init(cfg)
         self.cfg.textOffset = 0.008
     end
 
-    self:Update()
     self:_CreateThread()
     
     -- Make sure we destroy the instance if the resource stops
@@ -321,9 +320,11 @@ function vPrompt:_SetButton()
     self.button = {
         w = (math.max(self.cfg.buttonSize, self.keyTextWidth) * self.sw) / self.sw,
         h = (self.cfg.buttonSize * self.sw) / self.sh,
-        bgColor = self.cfg.buttonColor,
-        fontColor = self.cfg.keyColor          
+        bc = self.cfg.buttonColor,
+        fc = self.cfg.keyColor          
     }
+
+    self.fx = { w = self.button.w, h = self.button.h, a = 255 }
 end
 
 function vPrompt:_SetPadding()
@@ -342,8 +343,8 @@ function vPrompt:_SetBackground()
     self.background = {
         w = self.maxWidth,
         h = self.button.h + (self.boxPadding.y * 2),
-        bgColor = self.cfg.backgroundColor,
-        fontColor = self.cfg.labelColor    
+        bc = self.cfg.backgroundColor,
+        fc = self.cfg.labelColor    
     }
 
     self.button.x = self.cfg.origin.x - (self.background.w / 2) + (self.button.w / 2) + self.boxPadding.x
@@ -359,51 +360,50 @@ function vPrompt:_SetBackground()
         y = self.button.y - self.textHeight + self.cfg.textOffset
     }
 
+    -- Default to collapsed
     self.background.w = self.minWidth
 end
 
 function vPrompt:_Draw()
+    local bg    = self.background
+    local btn   = self.button
+
     if self.canInteract then
-        if self.background.w < self.maxWidth then
-            self.background.w = self.background.w + 0.008
+        if bg.w < self.maxWidth then
+            bg.w = bg.w + 0.008
         end
 
-        self.background.fontColor.a = 255
+        bg.fc.a = 255
     else
-        if self.background.w > self.minWidth then
-            self.background.w = self.background.w - 0.008
+        if bg.w > self.minWidth then
+            bg.w = bg.w - 0.008
         else
-            self.background.w = self.minWidth
+            bg.w = self.minWidth
         end
 
-        self.background.fontColor.a = 0
+        bg.fc.a = 0
     end
 
-    self.button.x = self.cfg.origin.x - (self.background.w / 2) + (self.button.w / 2) + self.boxPadding.x
-    self.button.text.x = self.button.x
+    btn.x = self.cfg.origin.x - (bg.w / 2) + (btn.w / 2) + self.boxPadding.x
+    btn.text.x = btn.x
 
     -- Render the boxes and text
-    self:_RenderElement(self.cfg.label, self.background)
-    self:_RenderElement(self.cfg.keyLabel, self.button, true)
+    self:_RenderElement(self.cfg.label, bg)
+    self:_RenderElement(self.cfg.keyLabel, btn, true)
 
     -- Draw keypress effect
     if self.pressed then
-        self.highlight.w = self.highlight.w + (0.0005 * self.sw) / self.sw
-        self.highlight.h = self.highlight.h + (0.0005 * self.sw) / self.sh
-        self.highlight.a = self.highlight.a - 18
+        self.fx.w = self.fx.w + (0.0005 * self.sw) / self.sw
+        self.fx.h = self.fx.h + (0.0005 * self.sw) / self.sh
+        self.fx.a = self.fx.a - 18
 
         SetDrawOrigin(self.cfg.coords.x, self.cfg.coords.y, self.cfg.coords.z, 0)
-        DrawRect(self.button.x, self.button.y, self.highlight.w, self.highlight.h, self.button.bgColor.r, self.button.bgColor.g, self.button.bgColor.b, self.highlight.a)
+        DrawRect(btn.x, btn.y, self.fx.w, self.fx.h, btn.bc.r, btn.bc.g, btn.bc.b, self.fx.a)
         ClearDrawOrigin()  
 
-        if self.highlight.a <= 0 then
+        if self.fx.a <= 0 then
             self.pressed = false
-
-            self.highlight = {
-                w = self.button.w,
-                h = self.button.h,
-                a = 255
-            }            
+            self.fx = { w = btn.w, h = btn.h, a = 255 }            
         end
     end
 end
@@ -412,11 +412,7 @@ function vPrompt:_CreateThread()
     Citizen.CreateThread(function()
         local player = PlayerPedId()
 
-        self.highlight = {
-            w = self.button.w,
-            h = self.button.h,
-            a = 255
-        }
+        self:Update()
 
         while true do
             local letSleep = true
@@ -554,12 +550,12 @@ end
 function vPrompt:_RenderElement(text, box, centered)
     SetTextScale(self.cfg.scale, self.cfg.scale)
     SetTextFont(self.cfg.font)
-    SetTextColour(box.fontColor.r, box.fontColor.g, box.fontColor.b, box.fontColor.a)
+    SetTextColour(box.fc.r, box.fc.g, box.fc.b, box.fc.a)
     SetTextEntry("STRING")
     SetTextCentre(centered ~= nil)
     AddTextComponentString(text)
     SetDrawOrigin(self.cfg.coords.x, self.cfg.coords.y, self.cfg.coords.z, 0)
     EndTextCommandDisplayText(box.text.x, box.text.y)
-    DrawRect(box.x, box.y, box.w, box.h, box.bgColor.r, box.bgColor.g, box.bgColor.b, box.bgColor.a)
+    DrawRect(box.x, box.y, box.w, box.h, box.bc.r, box.bc.g, box.bc.b, box.bc.a)
     ClearDrawOrigin()
 end
