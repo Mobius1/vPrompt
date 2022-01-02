@@ -1,7 +1,7 @@
 # vPrompt
  3D Interactive Prompts for FiveM
 
-vPrompt draws floating prompt elements like seen in ESX's `DrawText3D()` method, but with an added button element and background. vPrompt automatically detects when a player is withing interaction range and listens for when the defined key is pressed. This removes the need to write extra logic in your resource for calculating the player's proximty to the coords / entity / bone and also removes the need for extra keypress logic.
+vPrompt draws floating prompt elements like seen in ESX's `DrawText3D()` method, but with an added button element and background. vPrompt automatically detects when a player is within interaction range and listens for when the defined key is pressed. This removes the need to write extra logic in your resource for calculating the player's proximty to the coords / entity / bone and also removes the need for extra keypress logic.
 
 
  ### Features
