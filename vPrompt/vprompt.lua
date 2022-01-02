@@ -9,11 +9,11 @@ local Keys = {
     ["LEFT"] = 174, ["RIGHT"] = 175, ["UP"] = 27, ["DOWN"] = 173
 }
 
-local function mergeOptions(t1, t2)
+local function mergeTables(t1, t2)
     for k,v in pairs(t2) do
         if type(v) == "table" then
             if type(t1[k] or false) == "table" then
-                mergeOptions(t1[k] or {}, t2[k] or {})
+                mergeTables(t1[k] or {}, t2[k] or {})
             else
                 t1[k] = v
             end
@@ -46,7 +46,7 @@ end
 
 function vPrompt:_Init(cfg)
     -- Check for valid key
-    assert(Keys[cfg.key] ~= nil, '^1Invalid key:'.. cfg.key)
+    assert(Keys[cfg.key] ~= nil, string.format('^1Invalid key: %s', cfg.key))
 
     -- Default config for set-up
     local defaultConfig = {
@@ -66,33 +66,52 @@ function vPrompt:_Init(cfg)
         drawDistance = 4.0,
         interactDistance = 2.0,
         canDraw = function() return true end,
-    }     
+        drawMarker = false
+    }
+
+    local defaultMarker = {
+        drawDistance = 20.0,
+        type = 1,
+        dirX = 0.0, dirY = 0.0, dirZ = 0.0, 
+        rotX = 0.0, rotY = 0.0, rotZ = 0.0, 
+        scaleX = 1.0, scaleY = 1.0, scaleZ = 1.0, 
+        color = { r = 255, g = 255, b = 255, a = 150 },
+        bobUpAndDown = false, 
+        faceCamera = false, 
+        rotate = false,
+        textureDict = nil,
+        textureName = nil,
+        drawOnEnts = false
+    }
 
     -- Merge user-defined options
-    self.cfg = mergeOptions(defaultConfig, cfg)   
+    self.cfg = mergeTables(defaultConfig, cfg)   
 
     self.cfg.key = Keys[cfg.key]
     self.cfg.keyLabel = tostring(cfg.key)
     self.cfg.label = tostring(cfg.label)
     self.cfg.callbacks = {}
 
-    if cfg.entity then
+    if self.cfg.entity then
         -- Check for valid entity
-        assert(DoesEntityExist(cfg.entity), '^1Invalid entity passed to "entity" option')
-
-        self.cfg.entity = cfg.entity
-    elseif cfg.bone then
+        assert(DoesEntityExist(self.cfg.entity), '^1Invalid entity passed to "entity" option')
+    elseif self.cfg.bone then
         -- Check for valid entity
-        assert(DoesEntityExist(cfg.bone.entity), '^1Invalid entity passed to "bone.entity" option')
+        assert(DoesEntityExist(self.cfg.bone.entity), '^1Invalid entity passed to "bone.entity" option')
 
-        self.cfg.boneEntity = cfg.bone.entity
-        self.cfg.boneIndex = GetEntityBoneIndexByName(cfg.bone.entity, cfg.bone.name)
-    elseif cfg.coords then
+        self.cfg.boneEntity = self.cfg.bone.entity
+        self.cfg.boneIndex = GetEntityBoneIndexByName(self.cfg.bone.entity, self.cfg.bone.name)
+    elseif self.cfg.coords then
         -- Check for valid vector3 coords
-        assert(type(cfg.coords) == 'vector3', '^1Invalid vector3 value passed to "coords" option')
-
-        self.cfg.coords = cfg.coords       
+        assert(type(self.cfg.coords) == 'vector3', '^1Invalid vector3 value passed to "coords" option')
+    
         self.cfg.coords = self.cfg.coords + self.cfg.offset    
+    end
+
+    if self.cfg.drawMarker ~= false then
+        assert(type(self.cfg.drawMarker) == 'table', '^1Option "drawMarker" must be table of marker options')
+
+        self.cfg.marker = mergeTables(defaultMarker, self.cfg.drawMarker)   
     end
 
     -- Handle offsets for native GTA:V fonts
@@ -274,6 +293,11 @@ function vPrompt:On(event, cb)
 
     self.cfg.callbacks[event] = cb
 end
+
+
+------
+-- PRIVATE METHODS
+------
 
 function vPrompt:_GetDimensions()
     local sw, sh = GetActiveScreenResolution()
@@ -485,12 +509,24 @@ function vPrompt:_CreateThread()
                 end               
             end
 
-            if self.cfg.debug then
+            if self.cfg.marker or self.cfg.debug then
                 letSleep = false
 
                 local found, groundZ = GetGroundZFor_3dCoord(self.cfg.coords.x, self.cfg.coords.y, self.cfg.coords.z, false)
-                DrawMarker(1, self.cfg.coords.x, self.cfg.coords.y, groundZ, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, self.cfg.interactDistance * 2, self.cfg.interactDistance * 2, 1.0, 255, 255, 255, 100, false, true, 2, false, nil, nil, false)
-                DrawMarker(1, self.cfg.coords.x, self.cfg.coords.y, groundZ, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, self.cfg.drawDistance * 2, self.cfg.drawDistance * 2, 1.0, 255, 255, 255, 100, false, true, 2, false, nil, nil, false)                
+
+                -- Draw marker
+                if self.cfg.marker then
+                    if dist < self.cfg.marker.drawDistance then
+                        local m = self.cfg.marker
+                        DrawMarker(m.type, self.cfg.coords.x, self.cfg.coords.y, groundZ, m.dirX, m.dirY, m.dirZ, m.rotX, m.rotY, m.rotZ, m.scaleX, m.scaleY, m.scaleZ, m.color.r, m.color.g, m.color.b, m.color.a, m.bobUpAndDown, m.faceCamera, 2, m.rotate, m.textureDict, m.textureName, m.drawOnEnts)
+                    end
+                end
+
+                -- Draw debug markers
+                if self.cfg.debug then
+                    DrawMarker(1, self.cfg.coords.x, self.cfg.coords.y, groundZ, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, self.cfg.interactDistance * 2, self.cfg.interactDistance * 2, 1.0, 255, 255, 255, 100, false, true, 2, false, nil, nil, false)
+                    DrawMarker(1, self.cfg.coords.x, self.cfg.coords.y, groundZ, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, self.cfg.drawDistance * 2, self.cfg.drawDistance * 2, 1.0, 255, 255, 255, 100, false, true, 2, false, nil, nil, false)                
+                end
             end
     
             -- Let the thread sleep
