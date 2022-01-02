@@ -9,29 +9,23 @@ local Keys = {
     ["LEFT"] = 174, ["RIGHT"] = 175, ["UP"] = 27, ["DOWN"] = 173
 }
 
--- Default config for set-up
-local defaultConfig = {
-    debug = false,
-    font = 0,
-    scale = 0.4,
-    origin = vector2(0, 0),
-    offset = vector3(0, 0, 0),
-    margin = 0.008,
-    padding = 0.004,
-    textOffset = 0.00,
-    buttonSize = 0.015,
-    backgroundColor = { r = 0, g = 0, b = 0, a = 100 },
-    labelColor = { r = 255, g = 255, b = 255, a = 255 },
-    buttonColor = { r = 255, g = 255, b = 255, a = 255 },
-    buttonLabelColor = { r = 0, g = 0, b = 0, a = 255 },
-    drawDistance = 4.0,
-    interactDistance = 2.0,
-    canDraw = function() return true end,
-}
+local function mergeOptions(t1, t2)
+    for k,v in pairs(t2) do
+        if type(v) == "table" then
+            if type(t1[k] or false) == "table" then
+                mergeOptions(t1[k] or {}, t2[k] or {})
+            else
+                t1[k] = v
+            end
+        else
+            t1[k] = v
+        end
+    end
+    return t1
+end
 
 vPrompt = {}
 vPrompt.__index = vPrompt
-
 
 ------
 --
@@ -46,15 +40,6 @@ function vPrompt:Create(options)
 
     -- Initialise
     obj:_Init(options)
-    obj:Update()
-    obj:_CreateThread()
-
-    -- Make sure we destroy the instance if the resource stops
-    AddEventHandler('onResourceStop', function(resource)
-        if resource == GetCurrentResourceName() then
-            obj:Destroy()
-        end
-    end)
 
    return obj
 end
@@ -63,29 +48,32 @@ function vPrompt:_Init(cfg)
     -- Check for valid key
     assert(Keys[cfg.key] ~= nil, '^1Invalid key:'.. cfg.key)
 
-    self.cfg = {}
-
+    -- Default config for set-up
+    local defaultConfig = {
+        debug = false,
+        font = 0,
+        scale = 0.4,
+        origin = vector2(0, 0),
+        offset = vector3(0, 0, 0),
+        margin = 0.008,
+        padding = 0.004,
+        textOffset = 0.00,
+        buttonSize = 0.015,
+        backgroundColor = { r = 0, g = 0, b = 0, a = 100 },
+        labelColor = { r = 255, g = 255, b = 255, a = 255 },
+        buttonColor = { r = 255, g = 255, b = 255, a = 255 },
+        keyColor = { r = 0, g = 0, b = 0, a = 255 },
+        drawDistance = 4.0,
+        interactDistance = 2.0,
+        canDraw = function() return true end,
+    }     
 
     -- Merge user-defined options
-    self.cfg.debug = cfg.debug or defaultConfig.debug
-    self.cfg.label = tostring(cfg.label)
+    self.cfg = mergeOptions(defaultConfig, cfg)   
+
     self.cfg.key = Keys[cfg.key]
     self.cfg.keyLabel = tostring(cfg.key)
-    self.cfg.font = cfg.font or defaultConfig.font
-    self.cfg.scale = cfg.scale or defaultConfig.scale
-    self.cfg.origin = cfg.origin or defaultConfig.origin
-    self.cfg.offset = cfg.offset or defaultConfig.offset
-    self.cfg.margin = cfg.margin or defaultConfig.margin
-    self.cfg.padding = cfg.padding or defaultConfig.padding
-    self.cfg.textOffset = cfg.textOffset or defaultConfig.textOffset
-    self.cfg.buttonSize = cfg.buttonSize or defaultConfig.buttonSize
-    self.cfg.labelColor = cfg.labelColor or defaultConfig.labelColor
-    self.cfg.backgroundColor = cfg.backgroundColor or defaultConfig.backgroundColor
-    self.cfg.buttonColor = cfg.buttonColor or defaultConfig.buttonColor
-    self.cfg.buttonLabelColor = cfg.buttonLabelColor or defaultConfig.buttonLabelColor
-    self.cfg.drawDistance = cfg.drawDistance or defaultConfig.drawDistance
-    self.cfg.interactDistance = cfg.interactDistance or defaultConfig.interactDistance
-    self.cfg.canDraw = cfg.canDraw or defaultConfig.canDraw
+    self.cfg.label = tostring(cfg.label)
     self.cfg.callbacks = {}
 
     if cfg.entity then
@@ -115,6 +103,16 @@ function vPrompt:_Init(cfg)
     elseif self.cfg.font == 4 or self.cfg.font == 5 or self.cfg.font == 6 or self.cfg.font == 7 then
         self.cfg.textOffset = 0.008
     end
+
+    self:Update()
+    self:_CreateThread()
+    
+    -- Make sure we destroy the instance if the resource stops
+    AddEventHandler('onResourceStop', function(resource)
+        if resource == GetCurrentResourceName() then
+            self:Destroy()
+        end
+    end)    
 end
 
 ------
@@ -144,7 +142,7 @@ function vPrompt:SetKey(key)
     -- Check for valid key
     assert(Keys[key] ~= nil, '^1Invalid key:'.. key)
 
-    if key ~= self.cfg.keyLabel then
+    if tostring(key) ~= self.cfg.keyLabel then
         self.cfg.key        = Keys[key]
         self.cfg.keyLabel   = tostring(key)
     end
@@ -168,9 +166,12 @@ end
 
 ------
 --
--- Updates the label
+-- Updates the background box color
 --
--- @param label     string        - the new label
+-- @param r     integer        - the new red value
+-- @param g     integer        - the new green value
+-- @param b     integer        - the new blue value
+-- @param a     integer        - the new alpha value
 --
 -- @return void
 --
@@ -180,6 +181,63 @@ function vPrompt:SetBackgroundColor(r, g, b, a)
     self.cfg.backgroundColor.g = g
     self.cfg.backgroundColor.b = b
     self.cfg.backgroundColor.a = a
+end
+
+------
+--
+-- Updates the label text color
+--
+-- @param r     integer        - the new red value
+-- @param g     integer        - the new green value
+-- @param b     integer        - the new blue value
+-- @param a     integer        - the new alpha value
+--
+-- @return void
+--
+------
+function vPrompt:SetLabelColor(r, g, b, a)
+    self.cfg.labelColor.r = r
+    self.cfg.labelColor.g = g
+    self.cfg.labelColor.b = b
+    self.cfg.labelColor.a = a
+end
+
+------
+--
+-- Updates the key text color
+--
+-- @param r     integer        - the new red value
+-- @param g     integer        - the new green value
+-- @param b     integer        - the new blue value
+-- @param a     integer        - the new alpha value
+--
+-- @return void
+--
+------
+function vPrompt:SetKeyColor(r, g, b, a)
+    self.cfg.keyColor.r = r
+    self.cfg.keyColor.g = g
+    self.cfg.keyColor.b = b
+    self.cfg.keyColor.a = a
+end
+
+------
+--
+-- Updates the button color
+--
+-- @param r     integer        - the new red value
+-- @param g     integer        - the new green value
+-- @param b     integer        - the new blue value
+-- @param a     integer        - the new alpha value
+--
+-- @return void
+--
+------
+function vPrompt:SetButtonColor(r, g, b, a)
+    self.cfg.buttonColor.r = r
+    self.cfg.buttonColor.g = g
+    self.cfg.buttonColor.b = b
+    self.cfg.buttonColor.a = a
 end
 
 ------
@@ -238,7 +296,7 @@ function vPrompt:_SetButton()
         w = (math.max(self.cfg.buttonSize, self.keyTextWidth) * self.sw) / self.sw,
         h = (self.cfg.buttonSize * self.sw) / self.sh,
         bgColor = self.cfg.buttonColor,
-        fontColor = self.cfg.buttonLabelColor          
+        fontColor = self.cfg.keyColor          
     }
 end
 

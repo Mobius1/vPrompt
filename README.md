@@ -86,8 +86,6 @@ local myPrompt = vPrompt:Create({
 })
 ```
 
-NOTE: The instance is automatically destroyed if the resource using it is stopped / restarted
-
 ---
 
 ## Options
@@ -96,7 +94,7 @@ local myPrompt = vPrompt:Create({
     key = 'E',                  -- the key to be pressed
     label = 'Press Me',         -- the label
     drawDistance = 4.0,         -- The distance from the coords / entity / bone before the prompt is drawn
-    interactDistance - 2.0,     -- The distance from the coords / entity / bone before the player can interact    
+    interactDistance = 2.0,     -- The distance from the coords / entity / bone before the player can interact    
     font = 0,                   -- the font to be used
     scale = 0.4,                -- the font scale
     margin = 0.008,             -- The left / right margin for the label text  (percentage of screen)
@@ -107,7 +105,7 @@ local myPrompt = vPrompt:Create({
     backgroundColor = { r = 0, g = 0, b = 0, a = 100 },     -- background box color
     labelColor = { r = 255, g = 255, b = 255, a = 255 },    -- the label color
     buttonColor = { r = 255, g = 255, b = 255, a = 255 },   -- the button's background color
-    buttonLabelColor = { r = 0, g = 0, b = 0, a = 255 },    -- the button's text color
+    keyColor = { r = 0, g = 0, b = 0, a = 255 },            -- the button's text color
     canDraw = function()
         -- this should return a boolean
     end,
@@ -133,9 +131,39 @@ myPrompt:SetLabel(
 )
 ```
 
-#### Update background colour
+#### Update the background colour
 ```lua
 myPrompt:SetBackgroundColor(
+    r --[[ integer ]],
+    g --[[ integer ]],
+    b --[[ integer ]],
+    a --[[ integer ]]
+)
+```
+
+#### Update font color of the label
+```lua
+myPrompt:SetLabelColor(
+    r --[[ integer ]],
+    g --[[ integer ]],
+    b --[[ integer ]],
+    a --[[ integer ]]
+)
+```
+
+#### Update font color of the button
+```lua
+myPrompt:SetKeyColor(
+    r --[[ integer ]],
+    g --[[ integer ]],
+    b --[[ integer ]],
+    a --[[ integer ]]
+)
+```
+
+#### Update the background color of the button
+```lua
+myPrompt:SetButtonColor(
     r --[[ integer ]],
     g --[[ integer ]],
     b --[[ integer ]],
@@ -147,6 +175,8 @@ myPrompt:SetBackgroundColor(
 ```lua
 myPrompt:Destroy()
 ```
+
+NOTE: The instance is automatically destroyed if the resource using it is stopped / restarted
 
 ---
 
