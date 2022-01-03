@@ -119,6 +119,34 @@ local myPrompt = vPrompt:Create({
 
 ---
 
+## Events
+
+```lua
+local myPrompt = vPrompt:Create({ ... })
+
+myPrompt:On('interact', function()
+    -- Do something when the player presses the key
+end)
+
+myPrompt:On('enterInteractZone', function()
+    -- Do something when the player enters the interaction zone
+end)
+
+myPrompt:On('exitInteractZone', function()
+    -- Do something when the player exits the interaction zone
+end)
+
+myPrompt:On('show', function()
+    -- Do something when the prompt becomes visible
+end)
+
+myPrompt:On('hide', function()
+    -- Do something when the prompt gets hidden
+end)
+```
+
+---
+
 ## Methods
 
 #### Update key
@@ -183,29 +211,3 @@ myPrompt:Destroy()
 NOTE: The instance is automatically destroyed if the resource using it is stopped / restarted
 
 ---
-
-## Events
-
-```lua
-local myPrompt = vPrompt:Create({ ... })
-
-myPrompt:On('interact', function()
-    -- Do something when the player presses the key
-end)
-
-myPrompt:On('enterInteractZone', function()
-    -- Do something when the player enters the interaction zone
-end)
-
-myPrompt:On('exitInteractZone', function()
-    -- Do something when the player exits the interaction zone
-end)
-
-myPrompt:On('show', function()
-    -- Do something when the prompt becomes visible
-end)
-
-myPrompt:On('hide', function()
-    -- Do something when the prompt gets hidden
-end)
-```
