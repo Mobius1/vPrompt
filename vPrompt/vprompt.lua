@@ -410,12 +410,11 @@ end
 
 function vPrompt:_CreateThread()
     Citizen.CreateThread(function()
-        local player = PlayerPedId()
-
         self:Update()
 
         while true do
             local letSleep = true
+            local player = PlayerPedId()
             local pcoords = GetEntityCoords(player)
 
             if self.cfg.entity then -- Entity was set in the options so track it's coords
