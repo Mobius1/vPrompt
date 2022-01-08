@@ -61,13 +61,13 @@ local myPrompt = vPrompt:Create({
 Create prompt for entity:
 ```lua
 local player = PlayerPedId()
-local pcoords = GetEntityCoords(player)
-local bin = GetClosestObjectOfType(pcoords.x, pcoords.y, pcoords.z, 5.0, -654402915)
+local coords = GetEntityCoords(player)
+local vehicle = GetClosestVehicle(coords.x, coords.y, coords.z, 5.00, 0, 70)
 
 local myPrompt = vPrompt:Create({
     key = "E",
     label = "Open Boot",
-    entity = bin
+    entity = vehicle
 })
 ```
 
