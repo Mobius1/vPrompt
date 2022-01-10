@@ -67,7 +67,11 @@ local vehicle = GetClosestVehicle(coords.x, coords.y, coords.z, 5.00, 0, 70)
 local myPrompt = vPrompt:Create({
     key = "E",
     label = "Open Boot",
-    entity = vehicle
+    entity = vehicle,
+    canDraw = function()
+        -- Only draw the prompt if the player is not in a vehicle
+        return not IsPedInAnyVehicle(player)
+    end 
 })
 ```
 
@@ -85,6 +89,7 @@ local myPrompt = vPrompt:Create({
         name = 'door_dside_f' -- the bone name
     },
     canDraw = function()
+        -- Only draw the prompt if the player is not in a vehicle
         return not IsPedInAnyVehicle(player)
     end    
 })
@@ -102,7 +107,7 @@ local myPrompt = vPrompt:Create({
     font = 0,                   -- the font to be used
     scale = 0.4,                -- the font scale
     margin = 0.008,             -- The left / right margin for the label text  (percentage of screen)
-    padding = 0.004,            -- the padding for the background box  (percentage of screen)
+    padding = 0.004,            -- the padding for the background box (percentage of screen)
     buttonSize = 0.015,         -- The size of the button (percentage of screen)
     textOffset = 0.00,          -- y-offset for the text for custom fonts (GTAV native fonts are handled by the instance)
     offset = vector3(0, 0, 0)   -- The offset to apply to the prompt position
