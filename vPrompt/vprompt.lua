@@ -41,7 +41,7 @@ function vPrompt:Create(options)
     -- Initialise
     obj:_Init(options)
 
-   return obj
+    return obj
 end
 
 function vPrompt:_Init(cfg)
@@ -361,7 +361,9 @@ function vPrompt:_SetBackground()
     }
 
     -- Default to collapsed
-    self.background.w = self.minWidth
+    if self.cfg.drawDistance > self.cfg.interactDistance then
+        self.background.w = self.minWidth
+    end
 end
 
 function vPrompt:_Draw()
