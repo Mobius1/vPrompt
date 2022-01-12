@@ -93,6 +93,7 @@ local myPrompt = vPrompt:Create({
         return not IsPedInAnyVehicle(player)
     end,
     canInteract = function()
+        -- Only allow interaction if player has the lockpick item
         local hasLockPick = QBCore.Functions.HasItem('lockpick')
 
         return hasLockPick
