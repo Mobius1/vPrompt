@@ -66,6 +66,7 @@ function vPrompt:_Init(cfg)
         drawDistance = 4.0,
         interactDistance = 2.0,
         canDraw = function() return true end,
+        canInteract = function() return true end,
         drawMarker = false
     }
 
@@ -475,9 +476,13 @@ function vPrompt:_CreateThread()
                         if IsControlJustPressed(0, self.cfg.key) then
                             self.pressed = true
 
-                            -- Fire 'interact' event
-                            if self.cfg.callbacks.interact then
-                                self.cfg.callbacks.interact(dist, pcoords)
+                            local canInteract = self.cfg.canInteract()
+
+                            if canInteract then
+                                -- Fire 'interact' event
+                                if self.cfg.callbacks.interact then
+                                    self.cfg.callbacks.interact(dist, pcoords)
+                                end
                             end
                         end
                     else
