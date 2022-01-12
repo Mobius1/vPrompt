@@ -91,6 +91,11 @@ local myPrompt = vPrompt:Create({
     canDraw = function()
         -- Only draw the prompt if the player is not in a vehicle
         return not IsPedInAnyVehicle(player)
+    end,
+    canInteract = function()
+        local hasLockPick = QBCore.Functions.HasItem('lockpick')
+
+        return hasLockPick
     end    
 })
 ```
@@ -116,7 +121,10 @@ local myPrompt = vPrompt:Create({
     buttonColor = { r = 255, g = 255, b = 255, a = 255 },   -- the button's background color
     keyColor = { r = 0, g = 0, b = 0, a = 255 },            -- the button's text color
     canDraw = function()
-        -- this should return a boolean
+        -- this should return a boolean as to whether the instance should be drawn
+    end,    
+    canInteract = function()
+        -- this should return a boolean as to whether the keypress can be fired
     end,
     debug = false -- Draws debug markers to show draw and interact distances
 })
