@@ -263,6 +263,19 @@ end
 
 ------
 --
+-- Updates the coords
+--
+-- @param coords     table | vec3        - the new coords
+--
+-- @return void
+--
+------
+function vPrompt:SetCoords(coords)
+    self.cfg.coords = type(coords) == 'table' and vec3(coords.x, coords.y, coords.z) or coords
+end
+
+------
+--
 -- Destroys the instance
 --
 -- @return void
