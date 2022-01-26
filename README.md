@@ -163,6 +163,15 @@ end)
 
 ## Methods
 
+#### Update the coords
+```lua
+myPrompt:SetCoords(
+    coords --[[ table | vec3 ]]
+)
+```
+
+Won't work if `entity` or `bone` options are used
+
 #### Update key
 ```lua
 myPrompt:SetKey(
